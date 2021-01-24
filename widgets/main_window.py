@@ -42,7 +42,6 @@ class MainWindow(Gtk.Window):
         # self.active_requests_notebook.set_scrollable(True)
         # self.active_requests_notebook.set_show_border(False)
         #
-        self._add_blank_request(True)
         # self.active_requests_notebook_box.pack_start(self.active_requests_notebook, False, False, 0)
         self.active_requests_notebook_box.pack_end(self.request_editor, True, True, 0)
         #
@@ -51,6 +50,7 @@ class MainWindow(Gtk.Window):
         # self.request_pane.pack2(self.active_requests_notebook_box, True, False)
 
         self.active_requests_notebook.connect('switch-page', self._on_requests_notebook_switch_page)
+        self._add_blank_request()
 
         self.show_all()
         self.load_collections()
@@ -58,8 +58,6 @@ class MainWindow(Gtk.Window):
     def _on_requests_notebook_switch_page(self, notebook: Gtk.Notebook, page: Gtk.Widget, page_num: int):
         current_page = self.active_requests_notebook.get_current_page()
         log.debug('Switching active request from %d to %d', current_page, page_num)
-        current_req = self.request_editor.get_request()
-        self._get_current_active_tab().request_node = current_req
         page = self.active_requests_notebook.get_nth_page(page_num)
         tab: ActiveRequestTab = self.active_requests_notebook.get_tab_label(page)
         self.request_editor.set_request(tab.request_node)
@@ -81,15 +79,12 @@ class MainWindow(Gtk.Window):
     def _get_current_active_request(self) -> RequestTreeNode:
         return self._get_current_active_tab().request_node
 
-    def _add_blank_request(self, set_request=False):
+    def _add_blank_request(self):
         new_node = RequestTreeNode(request=RequestModel(name='New Request'))
         page = Gtk.DrawingArea()
         new_tab = ActiveRequestTab(self, page, new_node)
         page_num = self.active_requests_notebook.append_page(page, new_tab)
         self.active_requests_notebook.show_all()
-        if set_request:
-            self.request_editor.set_request(new_node)
-
         self.active_requests_notebook.set_current_page(page_num)
 
     def close_tab(self, tab: ActiveRequestTab):
