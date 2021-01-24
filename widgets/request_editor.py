@@ -37,6 +37,9 @@ class RequestEditor(Gtk.Box):
         self.response_container = ResponseContainer(self)
         self.request_response_box.add(self.response_container)
 
+        self.url_entry.connect('changed', self._on_url_change)
+        self.request_method_combo.connect('changed', self._on_method_change)
+
     @Gtk.Template.Callback('on_request_name_changed')
     def _on_request_name_changed(self, entry: Gtk.Entry):
         self.active_request = self.get_request()
@@ -62,13 +65,10 @@ class RequestEditor(Gtk.Box):
         self.request_container.set_request(node)
 
     def set_method(self, method: str):
-        it = self.request_method_combo_store.get_iter_first()
-        meth_idx = next((idx for idx, row in enumerate(self.request_method_combo_store[it]) if row[0] == method), 0)
-        self.request_method_combo.set_active(meth_idx)
+        self.request_method_combo.set_active_id(method)
 
     def get_method(self) -> str:
-        idx = self.request_method_combo.get_active()
-        return self.request_method_combo_store[idx][0]
+        return self.request_method_combo.get_active_id()
 
     @Gtk.Template.Callback('on_save_pressed')
     def _on_save_pressed(self, btn):
@@ -76,10 +76,8 @@ class RequestEditor(Gtk.Box):
 
     @Gtk.Template.Callback('on_send_pressed')
     def _on_send_pressed(self, btn):
-        url = self._format_request_url()
-        meth_idx = self.request_method_combo.get_active()
-        meth = self.request_method_combo_store[meth_idx][0]
-
+        url = self.active_request.request.url
+        meth = self.get_method()
         self.response_container.set_response_spinner_active(True)
 
         params = self.request_container.get_params()
@@ -106,8 +104,10 @@ class RequestEditor(Gtk.Box):
         self.last_response = response
         self.response_container.handle_request_finished(response)
 
-    def _format_request_url(self) -> str:
-        url = self.url_entry.get_text()
-        if not (url.startswith('http://') or url.startswith('https://')):
-            url = 'http://' + url
-        return url
+    def _on_url_change(self, entry: Gtk.Entry):
+        log.debug('Change request url to %s', entry.get_text())
+        self.active_request.request.url = entry.get_text()
+
+    def _on_method_change(self, entry: Gtk.ComboBox):
+        log.debug('Change request method to %s', self.active_request.request.method)
+        self.active_request.request.method = self.get_method()
