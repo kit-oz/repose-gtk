@@ -1,35 +1,39 @@
 import logging
-from typing import Tuple, List, Dict, Optional
+from typing import Optional
 
 from gi.repository import Gtk, GtkSource
 
-from models import RequestTreeNode, RequestModel
+from models import RequestModel
 from widgets.param_table import ParamTable
 from utils import language_map, content_type_map, content_type_map_reverse
 
 log = logging.getLogger(__name__)
 
 
-class RequestContainer:
+@Gtk.Template.from_file('ui/RequestContainer.glade')
+class RequestContainer(Gtk.Overlay):
+    __gtype_name__ = 'RequestContainer'
+
+    request_notebook: Gtk.Notebook = Gtk.Template.Child()
+    body_notebook: Gtk.Notebook = Gtk.Template.Child()
+    body_text: GtkSource.View = Gtk.Template.Child()
+
+    content_type_popover: Gtk.Popover = Gtk.Template.Child()
+    content_type_popover_tree_view: Gtk.TreeView = Gtk.Template.Child()
+    content_type_popover_store: Gtk.ListStore = Gtk.Template.Child()
+
     def __init__(self, request_editor):
-        self.request_editor = request_editor
+        super(RequestContainer, self).__init__()
+
         self.request_model: Optional[RequestModel] = None
-
-        builder = Gtk.Builder().new_from_file('ui/RequestContainer.glade')
-
-        self.request_notebook: Gtk.Notebook = builder.get_object(
-            'requestNotebook')
         self.lang_manager = GtkSource.LanguageManager()
-
-        self.body_notebook: Gtk.Notebook = builder.get_object(
-            'requestTypeNotebook')
         self.body_notebook.connect('switch-page',
                                    self._on_body_notebook_page_switched)
 
         self._init_param_table()
         self._init_header_table()
-        self._init_body_text(builder)
-        self._init_request_type_popover(builder)
+        self._init_body_text()
+        self._init_content_type_popover()
         self._init_body_form_data_table()
         self._init_body_form_urlencoded_table()
 
@@ -47,11 +51,9 @@ class RequestContainer:
                                           Gtk.Label(label='Headers'), 1)
         self.header_table.connect('changed', self._on_header_table_changed)
 
-    def _init_body_text(self, builder):
-        self.body_text: GtkSource.View = builder.get_object('requestText')
+    def _init_body_text(self):
         self.body_text_buffer = self.body_text.get_buffer()
-        self.body_text_buffer.connect('changed',
-                                          self._on_body_text_changed)
+        self.body_text_buffer.connect('changed', self._on_body_text_changed)
 
         style_manager = GtkSource.StyleSchemeManager()
         scheme: GtkSource.StyleScheme = style_manager.get_scheme('kate')
@@ -61,14 +63,8 @@ class RequestContainer:
         lang = self.lang_manager.get_language('text')
         self.body_text_buffer.set_language(lang)
 
-    def _init_request_type_popover(self, builder):
-        self.request_type_popover: Gtk.Popover = builder.get_object(
-            'requestTypePopover')
-        self.request_type_popover_tree_view: Gtk.TreeView = builder.get_object(
-            'requestTypePopoverTreeView')
-        self.request_type_popover_tree_view_store: Gtk.ListStore = builder.get_object(
-            'requestTypePopoverStore')
-        self.request_type_popover_tree_view.connect('row-activated',
+    def _init_content_type_popover(self):
+        self.content_type_popover_tree_view.connect('row-activated',
                                                     self._on_popover_row_activated)
 
     def _init_body_form_data_table(self):
@@ -133,7 +129,7 @@ class RequestContainer:
                 ('Content-Type', content_type, ''))
 
     def _get_active_content_type(self):
-        sel: Gtk.TreeSelection = self.request_type_popover_tree_view.get_selection()
+        sel: Gtk.TreeSelection = self.content_type_popover_tree_view.get_selection()
         model, paths = sel.get_selected_rows()
         if paths:
             type_id = model[paths[0]][1]
@@ -143,7 +139,7 @@ class RequestContainer:
 
     def _on_popover_row_activated(self, tree: Gtk.TreeView, path: Gtk.TreePath,
                                   col: Gtk.TreeViewColumn):
-        store = self.request_type_popover_tree_view_store
+        store = self.content_type_popover_store
         it = store.get_iter(path)
         type_name = store.get_value(it, 0)
         type_id = store.get_value(it, 1)
@@ -158,7 +154,7 @@ class RequestContainer:
         self.header_table.prepend_or_update_row_by_key(
             ('Content-Type', content_type, ''))
 
-        self.request_type_popover.hide()
+        self.content_type_popover.hide()
         self.body_notebook.set_current_page(1)
 
     def set_request_model(self, request_model: RequestModel):

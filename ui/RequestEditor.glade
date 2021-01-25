@@ -150,10 +150,10 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="request_response_box">
+      <object class="GtkPaned" id="request_response_box">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="homogeneous">True</property>
+        <property name="can_focus">True</property>
+        <property name="wide_handle">True</property>
         <child>
           <placeholder/>
         </child>
