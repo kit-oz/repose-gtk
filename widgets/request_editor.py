@@ -58,6 +58,7 @@ class RequestEditor(Gtk.Box):
         self.request_method_combo.set_active_id(self.request_model.method)
         self.request_name_entry.set_text(self.request_model.name)
         self.request_container.set_request_model(self.request_model)
+        self.response_container.set_request_model(self.request_model)
 
     def set_method(self, method: str):
         self.request_method_combo.set_active_id(method)
