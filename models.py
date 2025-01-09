@@ -1,9 +1,13 @@
+import logging
 import requests
 
+from gi.repository import GLib, GObject
 from uuid import uuid1
 from typing import Dict, List, Tuple, Optional
 
 from utils import content_type_map_reverse
+
+log = logging.getLogger(__name__)
 
 
 class MainModel:
@@ -11,7 +15,11 @@ class MainModel:
         self.requests: Dict[str, RequestTreeNode] = {}
 
 
-class RequestModel:
+class RequestModel(GObject.GObject):
+    __gsignals__ = {
+        'request_finished': (GObject.SIGNAL_RUN_FIRST, None, ())
+    }
+
     def __init__(self,
                  url: str = '',
                  method: str = 'GET',
@@ -25,6 +33,8 @@ class RequestModel:
 
                  saved: bool = False,
                  ):
+        GObject.GObject.__init__(self)
+
         self.name = name
 
         self.method = method
@@ -48,19 +58,31 @@ class RequestModel:
         self.headers = headers
 
     def do_request(self):
+        url = self._get_url()
         params = self._get_params()
         headers = self._get_headers()
         body = self._get_body()
 
         try:
-            self.request = requests.request(self.method,
-                                            self.url,
-                                            params=params,
-                                            headers=headers,
-                                            data=body)
-            print('DONE')
+            self.response = requests.request(self.method,
+                                             url=url,
+                                             params=params,
+                                             headers=headers,
+                                             data=body)
+            GLib.idle_add(self.handle_request_finished)
         except Exception as e:
-            print('ERROR', e)
+            log.error('Error occurred while sending request %s', e)
+            GLib.idle_add(self.handle_request_finished_exceptionally, e)
+
+    def handle_request_finished(self):
+        log.info(f'Got {self.response.status_code} response from {self.url}')
+        self.emit('request_finished')
+
+    def handle_request_finished_exceptionally(self, ex: Exception):
+        self.body_text = f'Error occurred while performing request: {ex}'
+
+    def _get_url(self) -> str:
+        return f'http://{self.url}' if self.url.find('://') == -1 else self.url
 
     def _get_params(self) -> List[Tuple[str, str]]:
         return [(k, v) for k, v, _ in self.params if k]
