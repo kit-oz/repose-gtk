@@ -12,10 +12,6 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">Text</col>
-        <col id="1" translatable="yes">text</col>
-      </row>
-      <row>
         <col id="0" translatable="yes">Text (text/plain)</col>
         <col id="1" translatable="yes">text-plain</col>
       </row>

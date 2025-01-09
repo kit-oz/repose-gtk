@@ -1,11 +1,14 @@
 from typing import List, Tuple
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 
 @Gtk.Template.from_file('ui/ParamTable.glade')
 class ParamTable(Gtk.TreeView):
     __gtype_name__ = 'ParamTable'
+    __gsignals__ = {
+        'changed': (GObject.SIGNAL_RUN_FIRST, None, ())
+    }
 
     key_column: Gtk.TreeViewColumn = Gtk.Template.Child()
     key_column_renderer: Gtk.CellRendererText = Gtk.Template.Child()
@@ -22,9 +25,13 @@ class ParamTable(Gtk.TreeView):
 
     def add_row(self, row: Tuple[str, str, str] = None):
         self.store.append(row or ('', '', ''))
+        if row:
+            self.emit("changed")
 
     def prepend_row(self, row: Tuple[str, str, str] = None):
         self.store.prepend(row or ('', '', ''))
+        if row:
+            self.emit("changed")
 
     def prepend_or_update_row_by_key(self, row: Tuple[str, str, str]):
         key, val, desc = row
@@ -32,6 +39,7 @@ class ParamTable(Gtk.TreeView):
             if store_row[0].lower() == key.lower():
                 store_row[1] = val
                 store_row[2] = desc
+                self.emit("changed")
                 return
         self.prepend_row(row)
 
@@ -46,6 +54,8 @@ class ParamTable(Gtk.TreeView):
         if idx is not None:
             self.store.remove(self.store[idx].iter)
 
+        self.emit("changed")
+
     @Gtk.Template.Callback('on_key_column_renderer_edited')
     def _on_key_column_edited(self, widget: Gtk.Widget, path: Gtk.TreePath, text: str):
         self.store[path][0] = text
@@ -53,13 +63,17 @@ class ParamTable(Gtk.TreeView):
         if text and len(self.store) and len(self.store[-1][0]):
             self.add_row()
 
+        self.emit("changed")
+
     @Gtk.Template.Callback('on_value_column_renderer_edited')
     def _on_value_column_edited(self, widget: Gtk.Widget, path: Gtk.TreePath, text: str):
         self.store[path][1] = text
+        self.emit("changed")
 
     @Gtk.Template.Callback('on_description_column_renderer_edited')
     def _on_description_column_edited(self, widget: Gtk.Widget, path: Gtk.TreePath, text: str):
         self.store[path][2] = text
+        self.emit("changed")
 
     def get_values(self) -> List[Tuple[str, str, str]]:
         return [(row[0], row[1], row[2]) for row in self.store if row[0]]

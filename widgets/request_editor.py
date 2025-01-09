@@ -4,7 +4,7 @@ from typing import List, Tuple, Dict, Optional
 import requests
 from gi.repository import Gtk, GLib
 
-from models import RequestTreeNode
+from models import RequestTreeNode, RequestModel
 from pool import TPE
 from widgets.request_container import RequestContainer
 from widgets.response_container import ResponseContainer
@@ -28,6 +28,7 @@ class RequestEditor(Gtk.Box):
         super(RequestEditor, self).__init__()
 
         self.main_window = main_window
+        self.request_model: Optional[RequestModel] = None
         self.active_request: Optional[RequestTreeNode] = None
         self.last_response: Optional[requests.Response] = None
 
@@ -48,27 +49,18 @@ class RequestEditor(Gtk.Box):
             self.main_window.request_list.update_request(self.active_request)
 
     def get_request(self) -> RequestTreeNode:
-        self.request_container.get_request(self.active_request)
-        node = self.active_request
-        req = node.request
-        req.url = self.url_entry.get_text()
-        req.method = self.get_method()
-        req.name = self.request_name_entry.get_text()
-        return node
+        return self.active_request
 
     def set_request(self, node: RequestTreeNode):
         self.active_request = node
-        req = node.request
-        self.url_entry.set_text(req.url)
-        self.set_method(req.method)
-        self.request_name_entry.set_text(req.name)
-        self.request_container.set_request(node)
+        self.request_model = node.request
+        self.url_entry.set_text(self.request_model.url)
+        self.request_method_combo.set_active_id(self.request_model.method)
+        self.request_name_entry.set_text(self.request_model.name)
+        self.request_container.set_request_model(self.request_model)
 
     def set_method(self, method: str):
         self.request_method_combo.set_active_id(method)
-
-    def get_method(self) -> str:
-        return self.request_method_combo.get_active_id()
 
     @Gtk.Template.Callback('on_save_pressed')
     def _on_save_pressed(self, btn):
@@ -76,16 +68,10 @@ class RequestEditor(Gtk.Box):
 
     @Gtk.Template.Callback('on_send_pressed')
     def _on_send_pressed(self, btn):
-        url = self.active_request.request.url
-        meth = self.get_method()
         self.response_container.set_response_spinner_active(True)
 
-        params = self.request_container.get_params()
-        headers = self.request_container.get_headers()
-        body = self.request_container.get_body()
-
-        TPE.submit(self.do_request, meth, url, params, headers, body)
-        log.info('Creating request to %s - %s', meth, url)
+        TPE.submit(self.request_model.do_request)
+        log.info('Creating request to %s - %s', self.request_model.method, self.request_model.url)
 
     def do_request(self, method: str, url: str, params: List[Tuple[str, str]], headers: Dict[str, str], data=None):
         try:
@@ -106,8 +92,8 @@ class RequestEditor(Gtk.Box):
 
     def _on_url_change(self, entry: Gtk.Entry):
         log.debug('Change request url to %s', entry.get_text())
-        self.active_request.request.url = entry.get_text()
+        self.request_model.url = entry.get_text()
 
     def _on_method_change(self, entry: Gtk.ComboBox):
-        log.debug('Change request method to %s', self.active_request.request.method)
-        self.active_request.request.method = self.get_method()
+        log.debug('Change request method to %s', self.request_model.method)
+        self.request_model.method = self.request_method_combo.get_active_id()
