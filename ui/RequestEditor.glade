@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.36.0 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.22"/>
   <object class="GtkListStore" id="request_body_type_store">
@@ -46,15 +46,41 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="orientation">vertical</property>
+    <property name="spacing">3</property>
     <child>
-      <object class="GtkEntry" id="request_name_entry">
+      <object class="GtkBox">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="margin_start">3</property>
-        <property name="margin_end">3</property>
-        <property name="margin_top">3</property>
-        <property name="placeholder_text" translatable="yes">Request Name</property>
-        <signal name="changed" handler="on_request_name_changed" swapped="no"/>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkEntry" id="request_name_entry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="margin_start">3</property>
+            <property name="margin_end">3</property>
+            <property name="margin_top">3</property>
+            <property name="placeholder_text" translatable="yes">Request Name</property>
+            <signal name="changed" handler="on_request_name_changed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="save_button">
+            <property name="label" translatable="yes">Save</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <signal name="clicked" handler="on_save_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -116,20 +142,6 @@
             <property name="position">2</property>
           </packing>
         </child>
-        <child>
-          <object class="GtkButton" id="save_button">
-            <property name="label" translatable="yes">Save</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <signal name="clicked" handler="on_save_pressed" swapped="no"/>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
-          </packing>
-        </child>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -138,24 +150,10 @@
       </packing>
     </child>
     <child>
-      <object class="GtkStackSwitcher" id="request_response_stack_switcher">
+      <object class="GtkBox" id="request_response_box">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="stack">request_response_stack</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="padding">4</property>
-        <property name="position">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkStack" id="request_response_stack">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="transition_type">slide-left-right</property>
+        <property name="homogeneous">True</property>
         <child>
           <placeholder/>
         </child>
@@ -163,7 +161,7 @@
       <packing>
         <property name="expand">True</property>
         <property name="fill">True</property>
-        <property name="position">3</property>
+        <property name="position">2</property>
       </packing>
     </child>
   </template>

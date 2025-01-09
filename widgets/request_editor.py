@@ -22,8 +22,7 @@ class RequestEditor(Gtk.Box):
     url_entry: Gtk.Entry = Gtk.Template.Child()
     send_button: Gtk.Button = Gtk.Template.Child()
     save_button: Gtk.Button = Gtk.Template.Child()
-    request_response_stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
-    request_response_stack: Gtk.Stack = Gtk.Template.Child()
+    request_response_box: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self, main_window):
         super(RequestEditor, self).__init__()
@@ -33,10 +32,10 @@ class RequestEditor(Gtk.Box):
         self.last_response: Optional[requests.Response] = None
 
         self.request_container = RequestContainer(self)
-        self.request_response_stack.add_titled(self.request_container.request_notebook, 'Request', 'Request')
+        self.request_response_box.add(self.request_container.request_notebook)
 
         self.response_container = ResponseContainer(self)
-        self.request_response_stack.add_titled(self.response_container, 'Response', 'Response')
+        self.request_response_box.add(self.response_container)
 
     @Gtk.Template.Callback('on_request_name_changed')
     def _on_request_name_changed(self, entry: Gtk.Entry):
@@ -82,7 +81,6 @@ class RequestEditor(Gtk.Box):
         meth = self.request_method_combo_store[meth_idx][0]
 
         self.response_container.set_response_spinner_active(True)
-        self.request_response_stack.set_visible_child(self.response_container)
 
         params = self.request_container.get_params()
         headers = self.request_container.get_headers()
