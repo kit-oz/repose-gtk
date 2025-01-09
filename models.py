@@ -63,10 +63,10 @@ class RequestModel:
             print('ERROR', e)
 
     def _get_params(self) -> List[Tuple[str, str]]:
-        return [(k, v) for k, v, _ in self.params]
+        return [(k, v) for k, v, _ in self.params if k]
 
     def _get_headers(self) -> Dict[str, str]:
-        return dict([(k, v) for k, v, _ in self.headers])
+        return dict([(k, v) for k, v, _ in self.headers if k])
 
     def _get_body(self):
         if self.content_type in content_type_map_reverse:
