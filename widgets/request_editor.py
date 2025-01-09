@@ -22,7 +22,7 @@ class RequestEditor(Gtk.Box):
     url_entry: Gtk.Entry = Gtk.Template.Child()
     send_button: Gtk.Button = Gtk.Template.Child()
     save_button: Gtk.Button = Gtk.Template.Child()
-    request_response_box: Gtk.Box = Gtk.Template.Child()
+    request_response_box: Gtk.Paned = Gtk.Template.Child()
 
     def __init__(self, main_window):
         super(RequestEditor, self).__init__()
@@ -33,10 +33,10 @@ class RequestEditor(Gtk.Box):
         self.last_response: Optional[requests.Response] = None
 
         self.request_container = RequestContainer(self)
-        self.request_response_box.add(self.request_container.request_notebook)
+        self.request_response_box.pack1(self.request_container, True, False)
 
         self.response_container = ResponseContainer(self)
-        self.request_response_box.add(self.response_container)
+        self.request_response_box.pack2(self.response_container, True, False)
 
         self.url_entry.connect('changed', self._on_url_change)
         self.request_method_combo.connect('changed', self._on_method_change)
